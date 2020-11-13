@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.pdf.PdfDocument;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -45,6 +47,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -147,7 +150,7 @@ import java.util.Locale;
             }
             else
             {
-
+                Toast.makeText(context, "Error Occurred", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -223,29 +226,76 @@ import java.util.Locale;
         File dirc=new File(String.valueOf(context.getExternalFilesDir("Scanner/Temp")));
         if(dirc.exists())
         {
+            File[] allfile=dirc.listFiles();
+            if(allfile.length<0)
+            {
+                Toast.makeText(this, "No File Found", Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                Document document=new Document();
+                try {
+                    File file=new File(context.getExternalFilesDir("Scanner"),"yajith.pdf");
+                    if(!file.exists())
+                    {
+                        file.createNewFile();
+                    }
+                    file.createNewFile();
+                    PdfWriter.getInstance(document,new FileOutputStream(file));
+                    document.open();
+                    for(int i=0;i<allfile.length;i++) {
+                        String path=context.getExternalFilesDir("Scanner/Temp").toString()+"/"+i+".jpeg";
+                        Image image = Image.getInstance(path);
+                        float scaler = ((document.getPageSize().getWidth() - document.leftMargin()-document.rightMargin() - 0) / image.getWidth()) * 100;
+                        image.scalePercent(scaler);
+                        image.setAlignment(Image.ALIGN_CENTER | Image.ALIGN_TOP);
+                        document.add(image);
+                        document.newPage();
+                    }
+                    document.close();
 
+
+                } catch (DocumentException e) {
+                    e.printStackTrace();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                dirc.deleteOnExit();
+                if(dirc.exists())
+                {
+
+                    dirc.delete();
+                }
+               // openpdf();
+            }
         }
         else
         {
             Toast.makeText(this, "Error Occurred", Toast.LENGTH_SHORT).show();
         }
+
     }
+    private void openpdf()
+    {
+        File file=new File(context.getExternalFilesDir("Scanner"),"yajith.pdf");
+        Uri uri=Uri.fromFile(file);
+        Intent intent=new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.setDataAndType(uri,"application/pdf");
+        try {
 
-     private File getOutputFile() {
-         File root = new File(this.getExternalFilesDir(null), "Scanner Folder");
-
-         boolean isFolderCreated = true;
-         if (!root.exists()) {
-             isFolderCreated = root.mkdir();
-         }
-         if (isFolderCreated) {
-             String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm", Locale.US).format(new Date());
-             return new File(root, name + ".pdf");
-         } else {
-             Toast.makeText(this, "Folder is not created", Toast.LENGTH_SHORT).show();
-             return null;
-         }
-     }
+            context.startActivity(intent);
+        }
+        catch (ActivityNotFoundException r)
+        {
+            r.printStackTrace();
+        }
+    }
     private void addimage(LinearLayout linearLayout, Bitmap bitmap)
     {
         ImageView imageView=new ImageView(this);
@@ -266,4 +316,9 @@ import java.util.Locale;
         }
         super.onDestroy();
     }
-}
+
+     @Override
+     public void onBackPressed() {
+
+     }
+ }
