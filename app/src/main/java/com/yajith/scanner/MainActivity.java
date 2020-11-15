@@ -56,33 +56,18 @@ import java.util.Locale;
  public class MainActivity extends AppCompatActivity {
     private LinearLayout linearLayout;
     private ImageButton button;
-    private Button scan,save;
     private ArrayList<Bitmap> arrayList;
     private SpeechRecognizer speechRecognizer;
-    private String name="yajith";
+    private String name="";
     private Context context;
     private TextToSpeech textToSpeech;
-    /*
-     <ImageButton
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:text="Take photo"
-        android:background="@drawable/round"
-        android:src="@drawable/ic_channel_foreground"
-        android:layout_weight="0"
-        android:id="@+id/add"
-        android:layout_gravity="bottom|center"/>
-
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         arrayList=new ArrayList<>();
         context=this;
-      //  button=findViewById(R.id.add);
-        save=findViewById(R.id.save);
-        scan=findViewById(R.id.scan);
+        button=findViewById(R.id.add);
         linearLayout=findViewById(R.id.photo);
         textToSpeech=new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
@@ -94,7 +79,7 @@ import java.util.Locale;
             }
         });
         speechRecognizer=SpeechRecognizer.createSpeechRecognizer(this);
-/*        button.setOnClickListener(new View.OnClickListener() {
+        button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -109,19 +94,6 @@ import java.util.Locale;
                 {
                     e.printStackTrace();
                 }
-               // capture();
-            }
-        });*/
-        scan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                capture();
-            }
-        });
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                save(arrayList);
             }
         });
     }
@@ -172,25 +144,29 @@ import java.util.Locale;
             {
                 capture();
             }
-            if(dat.get(0).toString().contains("enter the name"))
+            if(dat.get(0).toString().contains("name"))
             {
-                String[] n=dat.get(0).toString().split("enter the name ");
-                name=n[1].trim().toLowerCase();
-                Toast.makeText(this, n[1], Toast.LENGTH_SHORT).show();
+                String[] n=dat.get(0).toString().split("name");
+                if(n.length>1) {
+                    name = n[1].trim().toLowerCase();
+                    textToSpeech.speak("Done Added name " + name, TextToSpeech.QUEUE_FLUSH, null);
+                }
+                else
+                {
+                    textToSpeech.speak("say name name of file",TextToSpeech.QUEUE_FLUSH,null);
+                }
             }
             if(dat.get(0).toString().contains("save"))
             {
                 if(name.equals(""))
                 {
-                    textToSpeech.speak("Say Enter the name",TextToSpeech.QUEUE_FLUSH,null);
-                    Toast.makeText(this, "Say Enter the name", Toast.LENGTH_SHORT).show();
+                    textToSpeech.speak("Say name name of file",TextToSpeech.QUEUE_FLUSH,null);return;
                 }
                 if(arrayList.size()<0)
                 {
-                    textToSpeech.speak("No Images Captured",TextToSpeech.QUEUE_FLUSH,null);
-                    Toast.makeText(this, "No Images Captured", Toast.LENGTH_SHORT).show();
+                    textToSpeech.speak("No Images Captured. say capture to capture images",TextToSpeech.QUEUE_FLUSH,null);return;
                 }
-
+                save(arrayList);
             }
 
         }
@@ -235,7 +211,11 @@ import java.util.Locale;
             {
                 Document document=new Document();
                 try {
-                    File file=new File(context.getExternalFilesDir("Scanner"),"yajith.pdf");
+                    if(name.equals(""))
+                    {
+                        textToSpeech.speak("Say name name of file",TextToSpeech.QUEUE_FLUSH,null);return;
+                    }
+                    File file=new File(context.getExternalFilesDir("Scanner"),name+".pdf");
                     if(!file.exists())
                     {
                         file.createNewFile();
@@ -253,8 +233,6 @@ import java.util.Locale;
                         document.newPage();
                     }
                     document.close();
-
-
                 } catch (DocumentException e) {
                     e.printStackTrace();
                 } catch (FileNotFoundException e) {
@@ -265,31 +243,31 @@ import java.util.Locale;
                     e.printStackTrace();
                 }
                 dirc.deleteOnExit();
+                dirc.delete();
                 if(dirc.exists())
                 {
 
                     dirc.delete();
                 }
-               // openpdf();
+                openpdf();
             }
         }
         else
         {
-            Toast.makeText(this, "Error Occurred", Toast.LENGTH_SHORT).show();
+            textToSpeech.speak("Error",TextToSpeech.QUEUE_FLUSH,null);
         }
 
     }
     private void openpdf()
     {
-        File file=new File(context.getExternalFilesDir("Scanner"),"yajith.pdf");
-        Uri uri=Uri.fromFile(file);
+        File file=new File(context.getExternalFilesDir("Scanner"),name+".pdf");
+        Uri uri=Uri.parse("content://"+file.getAbsolutePath());
         Intent intent=new Intent();
         intent.setAction(Intent.ACTION_VIEW);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.setDataAndType(uri,"application/pdf");
         try {
-
-            context.startActivity(intent);
+            startActivity(intent);
         }
         catch (ActivityNotFoundException r)
         {
