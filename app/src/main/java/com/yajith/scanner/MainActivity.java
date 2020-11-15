@@ -278,6 +278,8 @@ import java.util.Locale;
     {
         ImageView imageView=new ImageView(this);
         imageView.setImageBitmap(bitmap);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(100, 100);
+        imageView.setLayoutParams(layoutParams);
         linearLayout.addView(imageView);
     }
 
