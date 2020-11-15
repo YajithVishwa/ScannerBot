@@ -28,7 +28,9 @@ import android.provider.MediaStore;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -182,7 +184,7 @@ import java.util.Locale;
         for(Bitmap bitmap:bitmaps)
         {
            ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
-           bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
+           bitmap.compress(Bitmap.CompressFormat.PNG,100,byteArrayOutputStream);
            File file1=new File(context.getExternalFilesDir("Scanner/Temp"),i+".jpeg");
             try {
                 FileOutputStream fileOutputStream=new FileOutputStream(file1);
@@ -224,7 +226,7 @@ import java.util.Locale;
                     PdfWriter.getInstance(document,new FileOutputStream(file));
                     document.open();
                     for(int i=0;i<allfile.length;i++) {
-                        String path=context.getExternalFilesDir("Scanner/Temp").toString()+"/"+i+".jpeg";
+                        String path=context.getExternalFilesDir("Scanner/Temp").toString()+"/"+i+".png";
                         Image image = Image.getInstance(path);
                         float scaler = ((document.getPageSize().getWidth() - document.leftMargin()-document.rightMargin() - 0) / image.getWidth()) * 100;
                         image.scalePercent(scaler);
@@ -278,7 +280,8 @@ import java.util.Locale;
     {
         ImageView imageView=new ImageView(this);
         imageView.setImageBitmap(bitmap);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(100, 100);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 400);
+        layoutParams.gravity= Gravity.CENTER;
         imageView.setLayoutParams(layoutParams);
         linearLayout.addView(imageView);
     }
