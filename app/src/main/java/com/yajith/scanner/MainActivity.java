@@ -139,36 +139,41 @@ import java.util.Locale;
             addimage(linearLayout,bitmap);
             arrayList.add(bitmap);
         }
-        if(requestCode==500)
-        {
-            ArrayList dat=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if(dat.get(0).toString().contains("capture"))
+        if(requestCode==500) {
+            try {
+                ArrayList dat = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (dat.get(0).toString().contains("capture")) {
+                    capture();
+                }
+                if (dat.get(0).toString().contains("open")) {
+                    open();
+                }
+                if (dat.get(0).toString().contains("delete")) {
+                    delete();
+                }
+                if (dat.get(0).toString().contains("name")) {
+                    String[] n = dat.get(0).toString().split("name");
+                    if (n.length > 1) {
+                        name = n[1].trim().toLowerCase();
+                        textToSpeech.speak("Done Added name " + name, TextToSpeech.QUEUE_FLUSH, null);
+                    } else {
+                        textToSpeech.speak("say name name of file", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+                if (dat.get(0).toString().contains("save")) {
+                    if (name.equals("")) {
+                        textToSpeech.speak("Say name name of file", TextToSpeech.QUEUE_FLUSH, null);
+                        return;
+                    }
+                    if (arrayList.size() < 0) {
+                        textToSpeech.speak("No Images Captured. say capture to capture images", TextToSpeech.QUEUE_FLUSH, null);
+                        return;
+                    }
+                    save(arrayList);
+                }
+            } catch (NullPointerException e)
             {
-                capture();
-            }
-            if(dat.get(0).toString().contains("name"))
-            {
-                String[] n=dat.get(0).toString().split("name");
-                if(n.length>1) {
-                    name = n[1].trim().toLowerCase();
-                    textToSpeech.speak("Done Added name " + name, TextToSpeech.QUEUE_FLUSH, null);
-                }
-                else
-                {
-                    textToSpeech.speak("say name name of file",TextToSpeech.QUEUE_FLUSH,null);
-                }
-            }
-            if(dat.get(0).toString().contains("save"))
-            {
-                if(name.equals(""))
-                {
-                    textToSpeech.speak("Say name name of file",TextToSpeech.QUEUE_FLUSH,null);return;
-                }
-                if(arrayList.size()<0)
-                {
-                    textToSpeech.speak("No Images Captured. say capture to capture images",TextToSpeech.QUEUE_FLUSH,null);return;
-                }
-                save(arrayList);
+                e.printStackTrace();
             }
 
         }
@@ -184,7 +189,7 @@ import java.util.Locale;
         for(Bitmap bitmap:bitmaps)
         {
            ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
-           bitmap.compress(Bitmap.CompressFormat.PNG,100,byteArrayOutputStream);
+           bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
            File file1=new File(context.getExternalFilesDir("Scanner/Temp"),i+".jpeg");
             try {
                 FileOutputStream fileOutputStream=new FileOutputStream(file1);
@@ -222,11 +227,10 @@ import java.util.Locale;
                     {
                         file.createNewFile();
                     }
-                    file.createNewFile();
                     PdfWriter.getInstance(document,new FileOutputStream(file));
                     document.open();
                     for(int i=0;i<allfile.length;i++) {
-                        String path=context.getExternalFilesDir("Scanner/Temp").toString()+"/"+i+".png";
+                        String path=context.getExternalFilesDir("Scanner/Temp").toString()+"/"+i+".jpeg";
                         Image image = Image.getInstance(path);
                         float scaler = ((document.getPageSize().getWidth() - document.leftMargin()-document.rightMargin() - 0) / image.getWidth()) * 100;
                         image.scalePercent(scaler);
@@ -244,13 +248,6 @@ import java.util.Locale;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                dirc.deleteOnExit();
-                dirc.delete();
-                if(dirc.exists())
-                {
-
-                    dirc.delete();
-                }
                 openpdf();
             }
         }
@@ -260,12 +257,29 @@ import java.util.Locale;
         }
 
     }
+    private void open()
+    {
+        if(name.equals(""))
+        {
+            textToSpeech.speak("No File Saved",TextToSpeech.QUEUE_FLUSH,null);
+            return;
+        }
+        File file=new File(context.getExternalFilesDir("Scanner"),name+".pdf");
+        Intent intent=new Intent(MainActivity.this,PDFViewer.class);
+        intent.putExtra("name",name);
+        startActivity(intent);
+    }
     private void openpdf()
     {
         File file=new File(context.getExternalFilesDir("Scanner"),name+".pdf");
-        Uri uri=Uri.parse("content://"+file.getAbsolutePath());
+        Intent intent=new Intent(MainActivity.this,PDFViewer.class);
+        intent.putExtra("name",name);
+        linearLayout.removeAllViewsInLayout();
+        startActivity(intent);
+        /*Uri uri=Uri.parse("content://"+file.getAbsolutePath());
         Intent intent=new Intent();
         intent.setAction(Intent.ACTION_VIEW);
+        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.setDataAndType(uri,"application/pdf");
         try {
@@ -274,6 +288,14 @@ import java.util.Locale;
         catch (ActivityNotFoundException r)
         {
             r.printStackTrace();
+        }*/
+    }
+    private void delete()
+    {
+        File file=new File(context.getExternalFilesDir("Scanner"),"Temp");
+        if(file.exists())
+        {
+            file.delete();
         }
     }
     private void addimage(LinearLayout linearLayout, Bitmap bitmap)
